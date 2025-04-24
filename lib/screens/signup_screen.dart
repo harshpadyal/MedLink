@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:medlink/utils/auth_service.dart';
-import 'login_screen.dart';
+import 'package:medlink/screens/login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   @override
@@ -15,27 +15,41 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController confirmPasswordController = TextEditingController();
   final AuthService authService = AuthService();
 
+  String selectedRole = 'User'; // Default role selection
+
   void _signup() async {
     if (_formKey.currentState!.validate()) {
       String email = emailController.text.trim();
       String password = passwordController.text.trim();
 
-      var user = await authService.signUp(email, password);
-      if (user != null) {
+      try {
+        var user = await authService.signUp(email, password, selectedRole);
+        if (user != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Verification email sent! Please verify your email before logging in.'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+
+          // ✅ Redirect to Login Screen using Named Route (`/`)
+          Future.delayed(Duration(seconds: 2), () {
+            Navigator.pushReplacementNamed(context, "/");
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Signup Failed. Please try again.'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Verification email sent! Please verify your email before logging in.',
-            ),
+            content: Text('Error: ${e.toString()}'),
+            duration: Duration(seconds: 3),
           ),
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => LoginScreen()),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Signup Failed. Check console for details.')),
         );
       }
     }
@@ -63,6 +77,8 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
                 SizedBox(height: 20),
+
+                // Email Input
                 TextFormField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -77,6 +93,8 @@ class _SignupScreenState extends State<SignupScreen> {
                   },
                 ),
                 SizedBox(height: 10),
+
+                // Password Input
                 TextFormField(
                   controller: passwordController,
                   obscureText: true,
@@ -91,6 +109,8 @@ class _SignupScreenState extends State<SignupScreen> {
                   },
                 ),
                 SizedBox(height: 10),
+
+                // Confirm Password Input
                 TextFormField(
                   controller: confirmPasswordController,
                   obscureText: true,
@@ -102,18 +122,34 @@ class _SignupScreenState extends State<SignupScreen> {
                     return null;
                   },
                 ),
+                SizedBox(height: 10),
+
+                // Role Selection Dropdown
+                DropdownButtonFormField<String>(
+                  value: selectedRole,
+                  items: ['User', 'Doctor'].map((role) {
+                    return DropdownMenuItem(value: role, child: Text(role));
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedRole = value!;
+                    });
+                  },
+                  decoration: InputDecoration(labelText: 'Select Role'),
+                ),
                 SizedBox(height: 20),
+
+                // Sign Up Button
                 ElevatedButton(
                   onPressed: _signup,
                   child: Text('Sign Up'),
                 ),
                 SizedBox(height: 10),
+
+                // Already have an account? Login
                 TextButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => LoginScreen()),
-                    );
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen()));
                   },
                   child: Text('Already have an account? Login'),
                 ),

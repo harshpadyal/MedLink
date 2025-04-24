@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
-import 'screens/login_screen.dart';
-import 'screens/signup_screen.dart';
-import 'screens/symptom_checker.dart';
-import 'screens/medicine_reminder.dart';
-import 'screens/emergency_map.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:medlink/screens/login_screen.dart';
+import 'package:medlink/screens/signup_screen.dart';
+import 'package:medlink/screens/doctor_dashboard.dart';
+import 'package:medlink/screens/user_dashboard.dart';
 import 'firebase_options.dart';
+import 'package:medlink/screens/reset_password_screen.dart';
+import 'package:google_maps_flutter_web/google_maps_flutter_web.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform, // Ensure Firebase options are set
+    options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(MedLinkApp());
 }
@@ -32,14 +33,25 @@ class MedLinkApp extends StatelessWidget {
         ),
         fontFamily: 'Montserrat',
       ),
-      initialRoute: '/',
+      initialRoute: '/login',
+      onGenerateRoute: (settings) {
+        if (settings.name == '/doctor_dashboard') {
+          final String doctorId = settings.arguments as String;
+          return MaterialPageRoute(
+            builder: (context) => DoctorDashboard(doctorId: doctorId),
+          );
+        } else if (settings.name == '/user_dashboard') {
+          final String userId = settings.arguments as String;
+          return MaterialPageRoute(
+            builder: (context) => UserDashboard(userId: userId),
+          );
+        }
+        return null;
+      },
       routes: {
-        '/': (context) => LoginScreen(),
+        '/login': (context) => LoginScreen(),
         '/signup': (context) => SignupScreen(),
-        '/home': (context) => HomeScreen(),
-        '/symptom_checker': (context) => SymptomCheckerScreen(),
-        '/medicine_reminder': (context) => MedicineReminderScreen(),
-        '/emergency_map': (context) => EmergencyMapScreen(),
+        '/reset_password': (context) => ResetPasswordPage(),
       },
     );
   }
